@@ -27,13 +27,23 @@ const DARK_MATTER_STYLE: StyleSpecification = {
   },
   layers: [{ id: 'carto-dark-matter', type: 'raster', source: 'carto' }],
 };
-const AUTHORITY_STYLES: Record<string, { name: string; color: string }> = {
+const ROUTE_COLORS = [
+  '#f6bd60',
+  '#84a59d',
+  '#f28482',
+  '#57c7ff',
+  '#b8e986',
+  '#c8a2ff',
+  '#ff8c61',
+];
+const AUTHORITY_STYLES: Record<string, { name: string }> = {
   LACMTA: {
-    name: 'LA Metro',
-    color: '#f6bd60',
+    name: 'LA Metro (LACMTA)',
+  },
+  LBT: {
+    name: 'Long Beach Transit (LBT)',
   },
 };
-const UNKNOWN_AUTHORITY = { name: 'Other authority', color: '#9eb6c1' };
 
 type FeedItem = {
   key: string;
@@ -83,7 +93,15 @@ function authorityId(device: DeviceState) {
 }
 
 function authorityStyle(device: DeviceState) {
-  return AUTHORITY_STYLES[authorityId(device)] ?? UNKNOWN_AUTHORITY;
+  const id = authorityId(device);
+  return AUTHORITY_STYLES[id] ?? { name: id };
+}
+
+function routeColor(route: string) {
+  let hash = 0;
+  for (const character of route)
+    hash = (hash * 31 + character.charCodeAt(0)) | 0;
+  return ROUTE_COLORS[Math.abs(hash) % ROUTE_COLORS.length]!;
 }
 
 function popupContent(device: DeviceState, route?: TransitRoute) {
@@ -115,13 +133,13 @@ export default function Home() {
   const [selectedRoute, setSelectedRoute] = useState<TransitRoute>();
   const [legendOpen, setLegendOpen] = useState(true);
   const activeAuthorities = useMemo(() => {
-    const authorities = new Map<string, { name: string; color: string }>();
+    const authorities = new Map<string, { name: string }>();
     for (const device of devices.values())
       authorities.set(authorityId(device), authorityStyle(device));
     return [...authorities.entries()];
   }, [devices]);
 
-  function setRouteLine(route?: TransitRoute, color = UNKNOWN_AUTHORITY.color) {
+  function setRouteLine(route?: TransitRoute) {
     const currentMap = map.current;
     if (!currentMap?.isStyleLoaded()) return;
     const source = currentMap.getSource('selected-bus-route') as
@@ -135,7 +153,7 @@ export default function Home() {
       currentMap.setPaintProperty(
         'selected-bus-route-line',
         'line-color',
-        color,
+        routeColor(route.routeCode),
       );
   }
 
@@ -154,7 +172,7 @@ export default function Home() {
       }
       if (selectedId.current !== device.device_id) return;
       setSelectedRoute(route);
-      setRouteLine(route, authorityStyle(device).color);
+      setRouteLine(route);
       if (openPopup) {
         const marker = markers.current.get(device.device_id);
         if (marker) {
@@ -350,10 +368,7 @@ export default function Home() {
       element.textContent = line === 'Unassigned' ? '—' : line;
       element.title = `Metro line ${line}, bus ${vehicleLabel(device)}`;
       element.setAttribute('aria-label', element.title);
-      element.style.setProperty(
-        '--authority-color',
-        authorityStyle(device).color,
-      );
+      element.style.setProperty('--route-color', routeColor(line));
       element.onclick = () => showDevice(device, true);
       marker.setLngLat([device.longitude, device.latitude]);
     }
@@ -418,15 +433,22 @@ export default function Home() {
               {activeAuthorities.length ? (
                 activeAuthorities.map(([id, authority]) => (
                   <span key={id}>
-                    <i style={{ background: authority.color }} />
-                    {authority.name}
+                    <i className="authority-palette" />
+                    {authority.name} buses
                   </span>
                 ))
               ) : (
                 <span>Waiting for authority data…</span>
               )}
+              {selected && (
+                <span className="selected-legend-value">
+                  <i style={{ background: routeColor(routeCode(selected)) }} />
+                  {authorityStyle(selected).name} · line {routeCode(selected)}
+                </span>
+              )}
               <small>
-                Marker and selected-route colors identify authority.
+                Colors distinguish bus lines; legend values identify the actual
+                authority.
               </small>
             </section>
           )}

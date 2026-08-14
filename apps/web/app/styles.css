@@ -161,19 +161,35 @@ h1 {
   border-radius: 50%;
   outline: 1px solid var(--ice);
 }
+.authority-legend .authority-palette {
+  background: conic-gradient(
+    #f6bd60 0 14%,
+    #84a59d 14% 28%,
+    #f28482 28% 42%,
+    #57c7ff 42% 56%,
+    #b8e986 56% 70%,
+    #c8a2ff 70% 84%,
+    #ff8c61 84% 100%
+  );
+}
+.authority-legend .selected-legend-value {
+  border-top: 1px solid var(--line);
+  padding-top: 9px;
+  font-weight: 800;
+}
 .authority-legend small {
   color: #9eb6c1;
   line-height: 1.45;
   letter-spacing: 0.04em;
 }
 .bus-marker {
-  --authority-color: var(--orange);
+  --route-color: var(--orange);
   min-width: 34px;
   height: 34px;
   padding: 0 7px;
   border: 3px solid var(--navy);
   border-radius: 18px;
-  background: var(--authority-color);
+  background: var(--route-color);
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.55);
   color: #07151e;
   cursor: pointer;
