@@ -1,38 +1,66 @@
-# Post-compact handoff
+# Vector session handoff
 
-The app at `http://localhost:3100` is running from rebuilt production containers against
-LA Metro's official bus WebSocket. Selecting a live bus loads its official directional
-stop pattern/overview, draws the direction line, and shows labels such as `Metro 487 ·
-Eastbound to Sierra Madre Villa Station`. Home restores the LA extent, and a selected bus
-is followed only after a later live position leaves the visible bounds.
+**Status:** User-accepted live dashboard; cross-tool documentation/agent workflow complete
+and ready for a future Codex or Claude Code session.
 
-The current interactions include:
+**Last updated:** 2026-08-13 PDT
 
-- point-marker clicks now fly to the selected bus at zoom 15 before opening its live
-  context;
-- a visible-by-default, toggleable **Route colors** legend.
+## Cross-tool session contract completed
 
-The deterministic seven-color palette visually separates bus lines; colors are not
-official transit symbology and can repeat. The latest action removed all dynamic legend
-content and authority mappings. The small static panel now explains the line palette,
-white selection ring, and matching selected-route line. Authority and line context remain
-in the bus popup/detail rather than changing the legend.
+- `AGENTS.md` is the tool-neutral instruction source Codex discovers natively.
+- `CLAUDE.md` imports it for Claude Code and points to canonical requirements, design, and
+  this handoff.
+- `.claude/commands/session-start.md` and `session-wrap.md` are Claude conveniences that
+  execute the same mandatory protocols as Codex.
+- Startup requires both instruction files, requirements/design/contracts/workflow/current
+  handoff, live Git/service/source state, user-change preservation, and approval review.
+- Wrap requires full applicable QA and failure evidence, requirements/design/ADR/contracts/
+  runbook/PLAN/HANDOFF maintenance, cross-tool instruction/link synchronization, secret/
+  personal-data/diff review, and detailed commit/push only when requested.
+- `docs/requirements.md` now defines functional/non-functional requirements, honest
+  delivery/privacy/performance constraints, acceptance evidence, and traceability.
+  `docs/design.md` defines topology, event/transaction/offset order, failure/degradation,
+  geospatial/provider, evolution, security/privacy, and observability rules.
+  `docs/engineering-workflow.md` defines ready/done gates and the documentation map.
+- README, architecture, decisions, and PLAN link or record this engineering baseline.
 
-The latest performance critique keeps WebSocket ingestion continuous but batches the
-visible device collection and event-feed entries on a five-second timer. Duplicate device
-updates within a window collapse to the newest state, the pending feed is bounded, the UI
-labels the cadence as **Refreshes every 5 seconds**, and an actively selected bus still
-updates its detail and off-screen follow immediately. This avoids rebuilding all map
-markers and the feed for every provider message.
+## Current accepted application
 
-Verification completed: Prettier, ESLint, all workspace TypeScript checks, 12 unit tests,
-and the production monorepo Docker build passed. The rebuilt stack is running and a live
-API check returned 1,415 LA Metro devices with `agency_id: LACMTA` at verification time.
+The app at `http://localhost:3100` is running against LA Metro's official bus WebSocket.
+Selecting a bus zooms to it, loads/draws its official directional pattern, and labels the
+direction/destination. Home restores the LA extent; selected buses are followed only after
+leaving the viewport.
 
-First after the next `/compact`, have the user confirm the simple Route Colors legend is
-static as buses are selected and observe that the event feed refreshes in five-second
-batches. Then check zoom, popup/route context, Home, and off-screen follow behavior. If
-accepted, execute the Redis outage and crash-before-offset demonstrations, run
-configurable k6 workloads, record actual latency/lag/error results, and capture the live
-dashboard. Preserve at-least-once claims and do not invent exactly-once or performance
-evidence.
+The visible, toggleable **Route colors** legend is static and correctly explains the
+deterministic seven-color route palette, selection ring, and matching route line. Colors
+are not official agency symbology and can repeat. The visible device collection/event feed
+refresh in five-second batches, while selected-bus details and off-screen follow remain
+immediate. The user reported no more critiques on 2026-08-13; preserve these accepted
+behaviors and the at-least-once guarantee unless a new request changes them.
+
+## Latest verification
+
+Observed after the cross-tool documentation change:
+
+```text
+Prettier format check       passed
+ESLint                      passed
+workspace TypeScript        passed
+Vitest                      12 passed
+production workspace build passed
+git diff --check            passed
+Docker Compose              all eight services up; Postgres/Redis/Redpanda healthy
+GET /health                 database=true, broker=true
+GET http://localhost:3100   HTTP 200
+```
+
+The requested live demo stack and LA Metro source remain running. No runtime code, broker,
+or database behavior changed in this final documentation session.
+
+## Next session
+
+Execute `AGENTS.md` mandatory startup (Claude Code may use `/session-start`). The only
+known proposed evidence work is the Redis outage demonstration, crash-before-offset
+redelivery demonstration, configurable k6 runs with actual latency/lag/error results, and
+a live dashboard screenshot/GIF. Run it only after explicit approval, protect the demo
+data/stack, and never invent exactly-once or performance claims.

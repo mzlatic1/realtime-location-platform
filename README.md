@@ -5,6 +5,15 @@ bounded Fastify API, Redpanda buffers at-least-once delivery, an idempotent proc
 maintains PostGIS history/current state, Redis accelerates/fans out live state, and a
 MapLibre dashboard resynchronizes through REST after WebSocket reconnects.
 
+## Coding-agent workflow
+
+Codex and Claude Code share one repository contract: Codex discovers
+[`AGENTS.md`](AGENTS.md), while [`CLAUDE.md`](CLAUDE.md) imports it and provides
+`/session-start` and `/session-wrap` conveniences. Before changes, read the canonical
+[requirements](docs/requirements.md), [design](docs/design.md),
+[engineering workflow](docs/engineering-workflow.md), and current [handoff](HANDOFF.md).
+Do not run a proposed destructive failure/load experiment without explicit approval.
+
 ```mermaid
 flowchart LR
  Sim[Deterministic simulator]-->API[Ingestion API]-->Raw[Redpanda location.raw]
@@ -65,7 +74,8 @@ Then force a processor restart immediately after a DB commit (debug breakpoint o
 before offset commit): Redpanda redelivers and the primary-key insert classifies the event
 as duplicate. Inspect processor metrics/logs and consumer lag with `rpk`. No representative
 load result or screenshot is committed yet; do not present the configurable k6 threshold
-as a measured achievement.
+as a measured achievement. The complete quality gate and documentation/evidence mapping
+are defined in [`docs/engineering-workflow.md`](docs/engineering-workflow.md).
 
 ## Intentional scope
 
