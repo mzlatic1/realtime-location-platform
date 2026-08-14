@@ -18,13 +18,21 @@ content and authority mappings. The small static panel now explains the line pal
 white selection ring, and matching selected-route line. Authority and line context remain
 in the bus popup/detail rather than changing the legend.
 
+The latest performance critique keeps WebSocket ingestion continuous but batches the
+visible device collection and event-feed entries on a five-second timer. Duplicate device
+updates within a window collapse to the newest state, the pending feed is bounded, the UI
+labels the cadence as **Refreshes every 5 seconds**, and an actively selected bus still
+updates its detail and off-screen follow immediately. This avoids rebuilding all map
+markers and the feed for every provider message.
+
 Verification completed: Prettier, ESLint, all workspace TypeScript checks, 12 unit tests,
 and the production monorepo Docker build passed. The rebuilt stack is running and a live
 API check returned 1,415 LA Metro devices with `agency_id: LACMTA` at verification time.
 
 First after the next `/compact`, have the user confirm the simple Route Colors legend is
-static as buses are selected, then check zoom, popup/route context, Home, and off-screen
-follow behavior. If accepted, execute the Redis outage and crash-before-offset
-demonstrations, run configurable k6 workloads, record actual latency/lag/error results,
-and capture the live dashboard. Preserve at-least-once claims and do not invent
-exactly-once or performance evidence.
+static as buses are selected and observe that the event feed refreshes in five-second
+batches. Then check zoom, popup/route context, Home, and off-screen follow behavior. If
+accepted, execute the Redis outage and crash-before-offset demonstrations, run
+configurable k6 workloads, record actual latency/lag/error results, and capture the live
+dashboard. Preserve at-least-once claims and do not invent exactly-once or performance
+evidence.

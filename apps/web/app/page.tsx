@@ -107,6 +107,8 @@ export default function Home() {
   const markers = useRef(new Map<string, Marker>());
   const selectedId = useRef<string | undefined>(undefined);
   const routeCache = useRef(new Map<string, TransitRoute>());
+  const pendingDevices = useRef(new Map<string, DeviceState>());
+  const pendingFeed = useRef<FeedItem[]>([]);
   const [devices, setDevices] = useState(new Map<string, DeviceState>());
   const [selected, setSelected] = useState<DeviceState>();
   const [connected, setConnected] = useState(false);
@@ -273,6 +275,22 @@ export default function Home() {
   useEffect(() => {
     let ws: WebSocket;
     let timer: ReturnType<typeof setTimeout>;
+    const refreshTimer = setInterval(() => {
+      if (pendingDevices.current.size) {
+        const updates = pendingDevices.current;
+        pendingDevices.current = new Map();
+        setDevices((old) => {
+          const next = new Map(old);
+          for (const [id, device] of updates) next.set(id, device);
+          return next;
+        });
+      }
+      if (pendingFeed.current.length) {
+        const updates = pendingFeed.current;
+        pendingFeed.current = [];
+        setFeed((old) => [...updates, ...old].slice(0, 12));
+      }
+    }, 5_000);
     const connect = () => {
       ws = new WebSocket(WS);
       ws.onopen = () => {
@@ -294,7 +312,7 @@ export default function Home() {
           )
             return;
           const route = routeCode(device);
-          setDevices((old) => new Map(old).set(device.device_id, device));
+          pendingDevices.current.set(device.device_id, device);
           if (selectedId.current === device.device_id) {
             setSelected(device);
             const coordinates: [number, number] = [
@@ -305,22 +323,21 @@ export default function Home() {
               map.current.easeTo({ center: coordinates, duration: 700 });
             void loadRoute(device);
           }
-          setFeed((old) =>
-            [
-              {
-                key: `${device.device_id}:${device.last_sequence_number}`,
-                deviceId: device.device_id,
-                label: `Line ${route} · Bus ${vehicleLabel(device)} · seq ${device.last_sequence_number}`,
-              },
-              ...old,
-            ].slice(0, 12),
-          );
+          pendingFeed.current = [
+            {
+              key: `${device.device_id}:${device.last_sequence_number}`,
+              deviceId: device.device_id,
+              label: `Line ${route} · Bus ${vehicleLabel(device)} · seq ${device.last_sequence_number}`,
+            },
+            ...pendingFeed.current,
+          ].slice(0, 60);
         }
       };
     };
     connect();
     return () => {
       clearTimeout(timer);
+      clearInterval(refreshTimer);
       ws?.close();
     };
   }, [paused]);
@@ -432,7 +449,9 @@ export default function Home() {
           </a>
         </div>
         <aside>
-          <h2>Event feed</h2>
+          <h2>
+            Event feed <small>Refreshes every 5 seconds</small>
+          </h2>
           {feed.length ? (
             feed.map((item) => (
               <button
