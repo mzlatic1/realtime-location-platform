@@ -12,6 +12,7 @@
     "typecheck": "pnpm -r typecheck",
     "test": "vitest run",
     "simulate": "pnpm --filter @realtime/simulator start",
+    "stream:la-metro": "pnpm --filter @realtime/la-metro-source start",
     "dlq:list": "tsx scripts/dlq.ts list",
     "dlq:replay": "tsx scripts/dlq.ts replay"
   },

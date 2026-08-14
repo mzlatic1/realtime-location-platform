@@ -89,6 +89,17 @@ services:
         postgres: { condition: service_healthy },
         redpanda: { condition: service_healthy },
       }
+  la-metro-source:
+    build: .
+    command: ['pnpm', '--filter', '@realtime/la-metro-source', 'start']
+    environment:
+      {
+        METRO_WS_URL: wss://api.metro.net/ws/LACMTA_Rail/vehicle_positions,
+        INGESTION_URL: http://ingestion-api:4100,
+        API_KEY: local-demo-key,
+      }
+    depends_on: { ingestion-api: { condition: service_started } }
+    restart: unless-stopped
   websocket:
     build: .
     command: ['pnpm', '--filter', '@realtime/websocket-gateway', 'start']

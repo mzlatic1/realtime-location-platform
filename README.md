@@ -20,12 +20,21 @@ flowchart LR
 corepack enable && pnpm install
 cp .env.example .env
 docker compose up --build
-pnpm simulate -- --devices 1000 --hz 0.2 --duplicates 0.01 --late 0.02 --seed 42
 ```
 
 Dashboard: `http://localhost:3100`; OpenAPI: `http://localhost:4100/docs`.
 Producer calls need `x-api-key: local-demo-key`. The 202 response acknowledges broker
 acceptance, not downstream completion.
+
+The default Compose stack connects to LA Metro's official rail vehicle-position
+WebSocket, normalizes each GTFS-realtime-shaped message, batches it through the public
+ingestion contract, and displays the processed positions. Provider timestamps become
+per-vehicle sequence numbers and deterministic event UUIDs make redelivery idempotent.
+The deterministic simulator remains available as an explicit offline/failure-test source:
+
+```bash
+pnpm simulate -- --devices 1000 --hz 0.2 --duplicates 0.01 --late 0.02 --seed 42
+```
 
 ## Guarantees
 

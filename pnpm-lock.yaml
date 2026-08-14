@@ -71,6 +71,12 @@ importers:
         specifier: ^3.25.76
         version: 3.25.76
 
+  apps/la-metro-source:
+    dependencies:
+      '@realtime/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
+
   apps/location-processor:
     dependencies:
       '@realtime/contracts':

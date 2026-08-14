@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from 'react';
 import maplibregl, { Map as MLMap, Marker } from 'maplibre-gl';
 import type { DeviceState, LiveMessage } from '@realtime/contracts';
 const WS = process.env.NEXT_PUBLIC_WS_URL ?? 'ws://localhost:4101/live';
+const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4100';
+const center: [number, number] = [-118.25, 34.0];
 export default function Home() {
   const mapNode = useRef<HTMLDivElement>(null),
     map = useRef<MLMap | null>(null),
@@ -19,14 +21,34 @@ export default function Home() {
       style:
         process.env.NEXT_PUBLIC_MAP_STYLE ??
         'https://demotiles.maplibre.org/style.json',
-      center: [-118.1937, 33.77],
-      zoom: 13,
+      center,
+      zoom: 9.5,
     });
     map.current.addControl(new maplibregl.NavigationControl(), 'bottom-right');
     return () => {
       map.current?.remove();
       map.current = null;
     };
+  }, []);
+  useEffect(() => {
+    void fetch(
+      `${API}/api/v1/devices/nearby?lat=${center[1]}&lon=${center[0]}&radius_m=50000&limit=200`,
+    )
+      .then((response) => {
+        if (!response.ok) throw new Error();
+        return response.json();
+      })
+      .then((body) =>
+        setDevices(
+          new Map(
+            (body.data as DeviceState[]).map((device) => [
+              device.device_id,
+              device,
+            ]),
+          ),
+        ),
+      )
+      .catch(() => undefined);
   }, []);
   useEffect(() => {
     let ws: WebSocket, timer: ReturnType<typeof setTimeout>;
@@ -52,13 +74,6 @@ export default function Home() {
               12,
             ),
           );
-          let marker = markers.current.get(d.device_id);
-          if (!marker) {
-            marker = new maplibregl.Marker({ color: '#e85d3f' })
-              .setLngLat([d.longitude, d.latitude])
-              .addTo(map.current!);
-            markers.current.set(d.device_id, marker);
-          } else marker.setLngLat([d.longitude, d.latitude]);
         }
       };
     };
@@ -68,12 +83,23 @@ export default function Home() {
       ws?.close();
     };
   }, [paused]);
+  useEffect(() => {
+    for (const device of devices.values()) {
+      let marker = markers.current.get(device.device_id);
+      if (!marker) {
+        marker = new maplibregl.Marker({ color: '#e85d3f' })
+          .setLngLat([device.longitude, device.latitude])
+          .addTo(map.current!);
+        markers.current.set(device.device_id, marker);
+      } else marker.setLngLat([device.longitude, device.latitude]);
+    }
+  }, [devices]);
   return (
     <main>
       <header>
         <div>
-          <span>VECTOR / OPS</span>
-          <h1>Location stream</h1>
+          <span>VECTOR / OPS · OFFICIAL LA METRO FEED</span>
+          <h1>LA Metro live.</h1>
         </div>
         <div className={`status ${connected ? 'live' : ''}`}>
           {connected ? '● LIVE' : '○ RECONNECTING'}
@@ -93,7 +119,16 @@ export default function Home() {
         </button>
       </section>
       <section className="grid">
-        <div className="map" ref={mapNode} />
+        <div className="map" ref={mapNode}>
+          <a
+            className="source-credit"
+            href="https://lacmta.github.io/metro-api-v2/docs/websockets/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Live vehicle positions · LA Metro API
+          </a>
+        </div>
         <aside>
           <h2>Event feed</h2>
           {feed.length ? (

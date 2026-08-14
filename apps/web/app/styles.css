@@ -84,7 +84,18 @@ h1 {
   border: 1px solid var(--line);
 }
 .map {
+  position: relative;
   min-height: 100%;
+}
+.source-credit {
+  position: absolute;
+  z-index: 1;
+  left: 10px;
+  bottom: 10px;
+  padding: 6px 8px;
+  background: rgba(11, 29, 42, 0.9);
+  color: var(--ice);
+  font-size: 0.65rem;
 }
 aside {
   background: var(--blue);

@@ -9,7 +9,8 @@
 - [x] Milestone 6 — responsive live MapLibre dashboard
 - [x] Milestone 7 — bounded retry/DLQ tools, graceful shutdown, replay-safe logic
 - [x] Milestone 8 — Prometheus metrics and configurable k6 scenarios
-- [ ] Milestone 9 — capture representative load results, failure demo output, screenshot/GIF
+- [x] Milestone 9 — official LA Metro source adapter and dashboard hydration
+- [ ] Milestone 10 — capture representative load results, failure demo output, screenshot/GIF
 
 The final operational evidence is never fabricated; run it against the complete local
 stack on the target machine and record the result.
