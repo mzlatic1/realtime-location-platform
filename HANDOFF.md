@@ -1,7 +1,7 @@
 # Vector session handoff
 
-**Status:** User-accepted live dashboard; cross-tool documentation/agent workflow complete
-and ready for a future Codex or Claude Code session.
+**Status:** User-accepted live dashboard; cross-tool documentation and agent workflow are
+complete, final wrap-up is complete, and all Docker containers are intentionally stopped.
 
 **Last updated:** 2026-08-13 PDT
 
@@ -26,10 +26,10 @@ and ready for a future Codex or Claude Code session.
 
 ## Current accepted application
 
-The app at `http://localhost:3100` is running against LA Metro's official bus WebSocket.
-Selecting a bus zooms to it, loads/draws its official directional pattern, and labels the
-direction/destination. Home restores the LA extent; selected buses are followed only after
-leaving the viewport.
+When started, the app at `http://localhost:3100` connects to LA Metro's official bus
+WebSocket. Selecting a bus zooms to it, loads/draws its official directional pattern, and
+labels the direction/destination. Home restores the LA extent; selected buses are followed
+only after leaving the viewport.
 
 The visible, toggleable **Route colors** legend is static and correctly explains the
 deterministic seven-color route palette, selection ring, and matching route line. Colors
@@ -49,18 +49,31 @@ workspace TypeScript        passed
 Vitest                      12 passed
 production workspace build passed
 git diff --check            passed
-Docker Compose              all eight services up; Postgres/Redis/Redpanda healthy
+Docker Compose smoke        all eight services up; Postgres/Redis/Redpanda healthy
 GET /health                 database=true, broker=true
 GET http://localhost:3100   HTTP 200
+GitHub Actions CI           run 31775461933 passed
 ```
 
-The requested live demo stack and LA Metro source remain running. No runtime code, broker,
-or database behavior changed in this final documentation session.
+## Final closeout state
+
+On 2026-08-13, the user requested a complete shutdown and wrap-up. All 17 running Docker
+containers on the host were stopped successfully, including the Vector web/API/WebSocket,
+LA Metro source, processor, PostgreSQL, Redis, and Redpanda services. `docker ps` returned
+no running containers afterward. Containers and persistent volumes were retained, so a
+future approved session can restore the stack with `docker compose up -d` (or
+`docker compose up --build` when rebuilding is required). Live ingestion is stopped and
+the dashboard/API/WebSocket URLs are not currently available.
+
+No runtime code, broker, database, or application data changed during closeout. The final
+documentation-only wrap records shutdown and preserves the prior live-smoke evidence.
 
 ## Next session
 
 Execute `AGENTS.md` mandatory startup (Claude Code may use `/session-start`). The only
-known proposed evidence work is the Redis outage demonstration, crash-before-offset
-redelivery demonstration, configurable k6 runs with actual latency/lag/error results, and
-a live dashboard screenshot/GIF. Run it only after explicit approval, protect the demo
-data/stack, and never invent exactly-once or performance claims.
+expected starting condition is no running Docker containers; inspect state first and start
+only services needed for an approved task. The only known proposed evidence work is the
+Redis outage demonstration, crash-before-offset redelivery demonstration, configurable
+k6 runs with actual latency/lag/error results, and a live dashboard screenshot/GIF. Run it
+only after explicit approval, protect the demo data/stack, and never invent exactly-once
+or performance claims.
