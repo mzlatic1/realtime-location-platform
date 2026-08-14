@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import maplibregl, {
   GeoJSONSource,
   Map as MLMap,
@@ -27,15 +27,13 @@ const DARK_MATTER_STYLE: StyleSpecification = {
   },
   layers: [{ id: 'carto-dark-matter', type: 'raster', source: 'carto' }],
 };
-const ROUTE_COLORS = [
-  '#f6bd60',
-  '#84a59d',
-  '#f28482',
-  '#57c7ff',
-  '#b8e986',
-  '#c8a2ff',
-  '#ff8c61',
-];
+const AUTHORITY_STYLES: Record<string, { name: string; color: string }> = {
+  LACMTA: {
+    name: 'LA Metro',
+    color: '#f6bd60',
+  },
+};
+const UNKNOWN_AUTHORITY = { name: 'Other authority', color: '#9eb6c1' };
 
 type FeedItem = {
   key: string;
@@ -80,11 +78,12 @@ function vehicleLabel(device: DeviceState) {
   );
 }
 
-function routeColor(route: string) {
-  let hash = 0;
-  for (const character of route)
-    hash = (hash * 31 + character.charCodeAt(0)) | 0;
-  return ROUTE_COLORS[Math.abs(hash) % ROUTE_COLORS.length]!;
+function authorityId(device: DeviceState) {
+  return metadataValue(device, 'agency_id') ?? 'unknown';
+}
+
+function authorityStyle(device: DeviceState) {
+  return AUTHORITY_STYLES[authorityId(device)] ?? UNKNOWN_AUTHORITY;
 }
 
 function popupContent(device: DeviceState, route?: TransitRoute) {
@@ -114,8 +113,15 @@ export default function Home() {
   const [paused, setPaused] = useState(false);
   const [feed, setFeed] = useState<FeedItem[]>([]);
   const [selectedRoute, setSelectedRoute] = useState<TransitRoute>();
+  const [legendOpen, setLegendOpen] = useState(true);
+  const activeAuthorities = useMemo(() => {
+    const authorities = new Map<string, { name: string; color: string }>();
+    for (const device of devices.values())
+      authorities.set(authorityId(device), authorityStyle(device));
+    return [...authorities.entries()];
+  }, [devices]);
 
-  function setRouteLine(route?: TransitRoute) {
+  function setRouteLine(route?: TransitRoute, color = UNKNOWN_AUTHORITY.color) {
     const currentMap = map.current;
     if (!currentMap?.isStyleLoaded()) return;
     const source = currentMap.getSource('selected-bus-route') as
@@ -129,7 +135,7 @@ export default function Home() {
       currentMap.setPaintProperty(
         'selected-bus-route-line',
         'line-color',
-        routeColor(route.routeCode),
+        color,
       );
   }
 
@@ -148,7 +154,7 @@ export default function Home() {
       }
       if (selectedId.current !== device.device_id) return;
       setSelectedRoute(route);
-      setRouteLine(route);
+      setRouteLine(route, authorityStyle(device).color);
       if (openPopup) {
         const marker = markers.current.get(device.device_id);
         if (marker) {
@@ -173,6 +179,10 @@ export default function Home() {
     setSelected(device);
     setSelectedRoute(undefined);
     setRouteLine(undefined);
+    map.current?.flyTo({
+      center: [device.longitude, device.latitude],
+      zoom: 15,
+    });
     for (const [id, existing] of markers.current) {
       existing
         .getElement()
@@ -340,7 +350,10 @@ export default function Home() {
       element.textContent = line === 'Unassigned' ? '—' : line;
       element.title = `Metro line ${line}, bus ${vehicleLabel(device)}`;
       element.setAttribute('aria-label', element.title);
-      element.style.setProperty('--route-color', routeColor(line));
+      element.style.setProperty(
+        '--authority-color',
+        authorityStyle(device).color,
+      );
       element.onclick = () => showDevice(device, true);
       marker.setLngLat([device.longitude, device.latitude]);
     }
@@ -387,6 +400,36 @@ export default function Home() {
           >
             ⌂ Home
           </button>
+          <button
+            className="legend-toggle"
+            onClick={() => setLegendOpen((value) => !value)}
+            aria-expanded={legendOpen}
+            aria-controls="authority-legend"
+          >
+            {legendOpen ? 'Hide' : 'Show'} legend
+          </button>
+          {legendOpen && (
+            <section
+              className="authority-legend"
+              id="authority-legend"
+              aria-label="Bus authority colors"
+            >
+              <b>BUS AUTHORITIES</b>
+              {activeAuthorities.length ? (
+                activeAuthorities.map(([id, authority]) => (
+                  <span key={id}>
+                    <i style={{ background: authority.color }} />
+                    {authority.name}
+                  </span>
+                ))
+              ) : (
+                <span>Waiting for authority data…</span>
+              )}
+              <small>
+                Marker and selected-route colors identify authority.
+              </small>
+            </section>
+          )}
           <a
             className="source-credit"
             href="https://lacmta.github.io/metro-api-v2/docs/websockets/"
@@ -404,13 +447,7 @@ export default function Home() {
                 key={item.key}
                 onClick={() => {
                   const device = devices.get(item.deviceId);
-                  if (device) {
-                    showDevice(device);
-                    map.current?.flyTo({
-                      center: [device.longitude, device.latitude],
-                      zoom: 15,
-                    });
-                  }
+                  if (device) showDevice(device);
                 }}
               >
                 {item.label}

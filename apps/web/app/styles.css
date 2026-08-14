@@ -112,14 +112,68 @@ h1 {
 .map-home:focus-visible {
   background: var(--orange);
 }
+.legend-toggle {
+  position: absolute;
+  z-index: 3;
+  top: 12px;
+  right: 12px;
+  height: 36px;
+  border: 1px solid var(--ice);
+  background: rgba(11, 29, 42, 0.94);
+  color: var(--ice);
+  padding: 0 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.legend-toggle:hover,
+.legend-toggle:focus-visible {
+  background: var(--orange);
+}
+.authority-legend {
+  position: absolute;
+  z-index: 3;
+  top: 58px;
+  right: 12px;
+  display: grid;
+  width: 230px;
+  gap: 9px;
+  border: 1px solid var(--ice);
+  background: rgba(11, 29, 42, 0.95);
+  padding: 14px;
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.35);
+}
+.authority-legend b {
+  color: #9eb6c1;
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+}
+.authority-legend span {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 0.76rem;
+}
+.authority-legend i {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 15px;
+  border: 2px solid var(--navy);
+  border-radius: 50%;
+  outline: 1px solid var(--ice);
+}
+.authority-legend small {
+  color: #9eb6c1;
+  line-height: 1.45;
+  letter-spacing: 0.04em;
+}
 .bus-marker {
-  --route-color: var(--orange);
+  --authority-color: var(--orange);
   min-width: 34px;
   height: 34px;
   padding: 0 7px;
   border: 3px solid var(--navy);
   border-radius: 18px;
-  background: var(--route-color);
+  background: var(--authority-color);
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.55);
   color: #07151e;
   cursor: pointer;
