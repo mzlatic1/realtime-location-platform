@@ -2,8 +2,7 @@ import type { LocationEvent } from '@realtime/contracts';
 import { toLocationEvent, type LaMetroVehicleMessage } from './adapter.js';
 
 const sourceUrl =
-  process.env.METRO_WS_URL ??
-  'wss://api.metro.net/ws/LACMTA_Rail/vehicle_positions';
+  process.env.METRO_WS_URL ?? 'wss://api.metro.net/ws/LACMTA/vehicle_positions';
 const ingestionUrl = process.env.INGESTION_URL ?? 'http://localhost:4100';
 const apiKey = process.env.API_KEY ?? 'local-demo-key';
 const flushIntervalMs = Number(process.env.SOURCE_FLUSH_INTERVAL_MS ?? 1000);

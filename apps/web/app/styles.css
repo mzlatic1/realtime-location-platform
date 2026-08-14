@@ -21,7 +21,7 @@ main {
 header {
   display: flex;
   justify-content: space-between;
-  align-items: end;
+  align-items: flex-end;
   border-bottom: 1px solid var(--line);
   padding-bottom: 18px;
 }
@@ -75,6 +75,13 @@ h1 {
   color: white;
   font-weight: 800;
 }
+.metrics .map-hint {
+  display: flex;
+  align-items: center;
+  color: #9eb6c1;
+  font-size: 0.74rem;
+  letter-spacing: 0.04em;
+}
 .grid {
   position: relative;
   height: calc(100vh - 210px);
@@ -86,6 +93,60 @@ h1 {
 .map {
   position: relative;
   min-height: 100%;
+}
+.bus-marker {
+  --route-color: var(--orange);
+  min-width: 34px;
+  height: 34px;
+  padding: 0 7px;
+  border: 3px solid var(--navy);
+  border-radius: 18px;
+  background: var(--route-color);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.55);
+  color: #07151e;
+  cursor: pointer;
+  font:
+    800 0.72rem/1 Inter,
+    system-ui,
+    sans-serif;
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease;
+}
+.bus-marker:hover,
+.bus-marker:focus-visible,
+.bus-marker.selected {
+  z-index: 2;
+  outline: 2px solid white;
+  outline-offset: 2px;
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.75);
+  transform: scale(1.14);
+}
+.maplibregl-popup-content {
+  min-width: 175px;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: #f7faf9;
+  box-shadow: 6px 6px 0 rgba(11, 29, 42, 0.5);
+  color: var(--navy);
+  padding: 12px 14px;
+}
+.maplibregl-popup-tip {
+  border-top-color: #f7faf9 !important;
+  border-bottom-color: #f7faf9 !important;
+}
+.bus-popup {
+  display: grid;
+  gap: 5px;
+}
+.bus-popup strong {
+  font-family: Georgia, serif;
+  font-size: 1.05rem;
+}
+.bus-popup span,
+.bus-popup small {
+  color: #45616d;
+  letter-spacing: 0;
 }
 .source-credit {
   position: absolute;
@@ -138,9 +199,13 @@ article h2 {
     2rem Georgia,
     serif;
 }
+.vehicle-name {
+  color: #9eb6c1;
+  margin: -18px 0 20px;
+}
 dl {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 8px;
 }
 dt {
@@ -156,6 +221,9 @@ dd {
   }
   .metrics div {
     min-width: 0;
+  }
+  .metrics .map-hint {
+    display: none;
   }
   .grid {
     grid-template-columns: 1fr;

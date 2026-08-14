@@ -5,13 +5,17 @@ import {
 } from '../apps/la-metro-source/src/adapter.js';
 
 const actualShape = {
-  id: '1042-1044-1210',
+  id: '5819',
   vehicle: {
-    position: { latitude: 34.020203, longitude: -118.27941 },
+    trip: {
+      tripId: '10040009472121-JUNE26',
+      routeId: '40-13201',
+    },
+    position: { latitude: 34.057503, longitude: -118.23064 },
     timestamp: '1786677991',
-    vehicle: { id: '1042-1044-1210', label: '1042-1044-1210' },
+    vehicle: { id: '5819', label: '5819' },
   },
-  route_code: '',
+  route_code: '40',
 };
 
 describe('LA Metro source adapter', () => {
@@ -19,12 +23,18 @@ describe('LA Metro source adapter', () => {
     expect(
       toLocationEvent(actualShape, new Date('2026-08-14T03:27:00Z')),
     ).toMatchObject({
-      device_id: 'la-metro:1042-1044-1210',
+      device_id: 'la-metro-bus:5819',
       sequence_number: 1786677991,
-      latitude: 34.020203,
-      longitude: -118.27941,
-      source: 'la-metro-gtfs-realtime',
+      latitude: 34.057503,
+      longitude: -118.23064,
+      source: 'la-metro-bus-gtfs-realtime',
       received_time: '2026-08-14T03:27:00.000Z',
+      metadata: {
+        agency_id: 'LACMTA',
+        route_code: '40',
+        route_id: '40-13201',
+        trip_id: '10040009472121-JUNE26',
+      },
     });
   });
 

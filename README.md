@@ -26,10 +26,13 @@ Dashboard: `http://localhost:3100`; OpenAPI: `http://localhost:4100/docs`.
 Producer calls need `x-api-key: local-demo-key`. The 202 response acknowledges broker
 acceptance, not downstream completion.
 
-The default Compose stack connects to LA Metro's official rail vehicle-position
+The default Compose stack connects to LA Metro's official bus vehicle-position
 WebSocket, normalizes each GTFS-realtime-shaped message, batches it through the public
-ingestion contract, and displays the processed positions. Provider timestamps become
-per-vehicle sequence numbers and deterministic event UUIDs make redelivery idempotent.
+ingestion contract, and displays the processed positions on a labeled, clickable map.
+Bus-line, trip, and provider-vehicle metadata remain attached to each current state so
+operators can identify a vehicle directly from its marker or detail card. Provider
+timestamps become per-vehicle sequence numbers and deterministic event UUIDs make
+redelivery idempotent.
 The deterministic simulator remains available as an explicit offline/failure-test source:
 
 ```bash

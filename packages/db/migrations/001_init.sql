@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS location_events(
 CREATE INDEX IF NOT EXISTS location_events_device_time ON location_events(device_id,event_time DESC,event_id);
 CREATE INDEX IF NOT EXISTS location_events_time ON location_events(event_time DESC);
 CREATE TABLE IF NOT EXISTS device_state(device_id text PRIMARY KEY,last_event_id uuid NOT NULL,last_sequence_number bigint NOT NULL,last_event_time timestamptz NOT NULL,
- latitude double precision NOT NULL,longitude double precision NOT NULL,geom geography(Point,4326) NOT NULL,speed_mps double precision,heading_deg double precision,updated_at timestamptz NOT NULL DEFAULT now());
+ latitude double precision NOT NULL,longitude double precision NOT NULL,geom geography(Point,4326) NOT NULL,speed_mps double precision,heading_deg double precision,source text,metadata jsonb NOT NULL DEFAULT '{}',updated_at timestamptz NOT NULL DEFAULT now());
 CREATE INDEX IF NOT EXISTS device_state_geom_gist ON device_state USING gist(geom);
 CREATE TABLE IF NOT EXISTS geofences(geofence_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),name text NOT NULL,geom geometry(MultiPolygon,4326) NOT NULL,active boolean NOT NULL DEFAULT true,created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now());
 CREATE INDEX IF NOT EXISTS geofences_geom_gist ON geofences USING gist(geom) WHERE active;

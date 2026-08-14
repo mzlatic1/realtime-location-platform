@@ -29,6 +29,8 @@ export type DeviceState = {
   longitude: number;
   speed_mps?: number;
   heading_deg?: number;
+  source?: string;
+  metadata?: Record<string, unknown>;
   updated_at: string;
 };
 export type GeofenceTransition = 'ENTER' | 'EXIT';

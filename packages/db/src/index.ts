@@ -47,7 +47,7 @@ export class LocationDatabase {
         return { duplicate: true, stale: false, transitions: [] };
       }
       const updated = await client.query(
-        `INSERT INTO device_state(device_id,last_event_id,last_sequence_number,last_event_time,latitude,longitude,geom,speed_mps,heading_deg) VALUES($1,$2,$3,$4,$5,$6,ST_SetSRID(ST_MakePoint($6,$5),4326)::geography,$7,$8) ON CONFLICT(device_id) DO UPDATE SET last_event_id=excluded.last_event_id,last_sequence_number=excluded.last_sequence_number,last_event_time=excluded.last_event_time,latitude=excluded.latitude,longitude=excluded.longitude,geom=excluded.geom,speed_mps=excluded.speed_mps,heading_deg=excluded.heading_deg,updated_at=now() WHERE (excluded.last_sequence_number,excluded.last_event_time,excluded.last_event_id)>(device_state.last_sequence_number,device_state.last_event_time,device_state.last_event_id) RETURNING *`,
+        `INSERT INTO device_state(device_id,last_event_id,last_sequence_number,last_event_time,latitude,longitude,geom,speed_mps,heading_deg,source,metadata) VALUES($1,$2,$3,$4,$5,$6,ST_SetSRID(ST_MakePoint($6,$5),4326)::geography,$7,$8,$9,$10) ON CONFLICT(device_id) DO UPDATE SET last_event_id=excluded.last_event_id,last_sequence_number=excluded.last_sequence_number,last_event_time=excluded.last_event_time,latitude=excluded.latitude,longitude=excluded.longitude,geom=excluded.geom,speed_mps=excluded.speed_mps,heading_deg=excluded.heading_deg,source=excluded.source,metadata=excluded.metadata,updated_at=now() WHERE (excluded.last_sequence_number,excluded.last_event_time,excluded.last_event_id)>(device_state.last_sequence_number,device_state.last_event_time,device_state.last_event_id) RETURNING *`,
         [
           event.device_id,
           event.event_id,
@@ -57,6 +57,8 @@ export class LocationDatabase {
           event.longitude,
           event.speed_mps ?? null,
           event.heading_deg ?? null,
+          event.source,
+          event.metadata,
         ],
       );
       if (updated.rowCount === 0) {
@@ -115,6 +117,8 @@ export class LocationDatabase {
           speed_mps: row.speed_mps === null ? undefined : Number(row.speed_mps),
           heading_deg:
             row.heading_deg === null ? undefined : Number(row.heading_deg),
+          source: row.source ?? undefined,
+          metadata: row.metadata ?? {},
           updated_at: new Date(row.updated_at).toISOString(),
         },
         transitions,
@@ -142,13 +146,15 @@ export class LocationDatabase {
       longitude: Number(x.longitude),
       speed_mps: x.speed_mps === null ? undefined : Number(x.speed_mps),
       heading_deg: x.heading_deg === null ? undefined : Number(x.heading_deg),
+      source: x.source ?? undefined,
+      metadata: x.metadata ?? {},
       updated_at: new Date(x.updated_at).toISOString(),
     } as DeviceState;
   }
   async nearby(lat: number, lon: number, radius: number, limit: number) {
     return (
       await this.pool.query(
-        `SELECT device_id,last_event_id,last_sequence_number,last_event_time,latitude,longitude,speed_mps,heading_deg,updated_at,ST_Distance(geom,ST_SetSRID(ST_MakePoint($2,$1),4326)::geography) distance_m FROM device_state WHERE ST_DWithin(geom,ST_SetSRID(ST_MakePoint($2,$1),4326)::geography,$3) ORDER BY distance_m,device_id LIMIT $4`,
+        `SELECT device_id,last_event_id,last_sequence_number,last_event_time,latitude,longitude,speed_mps,heading_deg,source,metadata,updated_at,ST_Distance(geom,ST_SetSRID(ST_MakePoint($2,$1),4326)::geography) distance_m FROM device_state WHERE ST_DWithin(geom,ST_SetSRID(ST_MakePoint($2,$1),4326)::geography,$3) ORDER BY distance_m,device_id LIMIT $4`,
         [lat, lon, radius, limit],
       )
     ).rows;

@@ -12,7 +12,12 @@ export type LaMetroVehicleMessage = {
       speed?: number;
     };
     timestamp?: string | number;
-    trip?: { trip_id?: string; route_id?: string };
+    trip?: {
+      trip_id?: string;
+      route_id?: string;
+      tripId?: string;
+      routeId?: string;
+    };
     vehicle?: { id?: string; label?: string };
   };
 };
@@ -44,7 +49,9 @@ export function toLocationEvent(
   )
     return undefined;
 
-  const deviceId = `la-metro:${providerId}`;
+  const deviceId = `la-metro-bus:${providerId}`;
+  const providerRouteId = vehicle?.trip?.route_id || vehicle?.trip?.routeId;
+  const routeCode = message.route_code || providerRouteId?.split('-')[0];
   const eventTime = new Date(timestamp * 1000).toISOString();
   const identity = [
     deviceId,
@@ -72,14 +79,15 @@ export function toLocationEvent(
       position.bearing < 360
         ? position.bearing
         : undefined,
-    source: 'la-metro-gtfs-realtime',
+    source: 'la-metro-bus-gtfs-realtime',
     metadata: {
       agency: 'Los Angeles County Metropolitan Transportation Authority',
-      agency_id: 'LACMTA_Rail',
+      agency_id: 'LACMTA',
       provider_vehicle_id: providerId,
       vehicle_label: vehicle?.vehicle?.label,
-      route_code: message.route_code || vehicle?.trip?.route_id,
-      trip_id: vehicle?.trip?.trip_id,
+      route_code: routeCode,
+      route_id: providerRouteId,
+      trip_id: vehicle?.trip?.trip_id || vehicle?.trip?.tripId,
       provider: 'api.metro.net',
     },
   };

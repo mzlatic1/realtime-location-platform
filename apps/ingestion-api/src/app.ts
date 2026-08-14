@@ -149,8 +149,8 @@ export function buildApp(
       .object({
         lat: z.coerce.number().min(-90).max(90),
         lon: z.coerce.number().min(-180).max(180),
-        radius_m: z.coerce.number().positive().max(50000).default(5000),
-        limit: z.coerce.number().int().positive().max(200).default(50),
+        radius_m: z.coerce.number().positive().max(100000).default(5000),
+        limit: z.coerce.number().int().positive().max(2000).default(50),
       })
       .parse(req.query);
     return { data: await db.nearby(q.lat, q.lon, q.radius_m, q.limit) };
