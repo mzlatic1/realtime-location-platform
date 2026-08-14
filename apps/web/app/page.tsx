@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import maplibregl, {
   GeoJSONSource,
   Map as MLMap,
@@ -36,15 +36,6 @@ const ROUTE_COLORS = [
   '#c8a2ff',
   '#ff8c61',
 ];
-const AUTHORITY_STYLES: Record<string, { name: string }> = {
-  LACMTA: {
-    name: 'LA Metro (LACMTA)',
-  },
-  LBT: {
-    name: 'Long Beach Transit (LBT)',
-  },
-};
-
 type FeedItem = {
   key: string;
   deviceId: string;
@@ -88,15 +79,6 @@ function vehicleLabel(device: DeviceState) {
   );
 }
 
-function authorityId(device: DeviceState) {
-  return metadataValue(device, 'agency_id') ?? 'unknown';
-}
-
-function authorityStyle(device: DeviceState) {
-  const id = authorityId(device);
-  return AUTHORITY_STYLES[id] ?? { name: id };
-}
-
 function routeColor(route: string) {
   let hash = 0;
   for (const character of route)
@@ -132,12 +114,6 @@ export default function Home() {
   const [feed, setFeed] = useState<FeedItem[]>([]);
   const [selectedRoute, setSelectedRoute] = useState<TransitRoute>();
   const [legendOpen, setLegendOpen] = useState(true);
-  const activeAuthorities = useMemo(() => {
-    const authorities = new Map<string, { name: string }>();
-    for (const device of devices.values())
-      authorities.set(authorityId(device), authorityStyle(device));
-    return [...authorities.entries()];
-  }, [devices]);
 
   function setRouteLine(route?: TransitRoute) {
     const currentMap = map.current;
@@ -419,36 +395,30 @@ export default function Home() {
             className="legend-toggle"
             onClick={() => setLegendOpen((value) => !value)}
             aria-expanded={legendOpen}
-            aria-controls="authority-legend"
+            aria-controls="route-legend"
           >
             {legendOpen ? 'Hide' : 'Show'} legend
           </button>
           {legendOpen && (
             <section
-              className="authority-legend"
-              id="authority-legend"
-              aria-label="Bus authority colors"
+              className="route-legend"
+              id="route-legend"
+              aria-label="Route color symbols"
             >
-              <b>BUS AUTHORITIES</b>
-              {activeAuthorities.length ? (
-                activeAuthorities.map(([id, authority]) => (
-                  <span key={id}>
-                    <i className="authority-palette" />
-                    {authority.name} buses
-                  </span>
-                ))
-              ) : (
-                <span>Waiting for authority data…</span>
-              )}
-              {selected && (
-                <span className="selected-legend-value">
-                  <i style={{ background: routeColor(routeCode(selected)) }} />
-                  {authorityStyle(selected).name} · line {routeCode(selected)}
-                </span>
-              )}
+              <b>ROUTE COLORS</b>
+              <span>
+                <i className="route-palette" /> Bus line colors
+              </span>
+              <span>
+                <i className="selected-bus-symbol" /> White ring = selected bus
+              </span>
+              <span>
+                <i className="selected-route-symbol" /> Selected route matches
+                bus
+              </span>
               <small>
-                Colors distinguish bus lines; legend values identify the actual
-                authority.
+                Colors visually distinguish lines. They are not official transit
+                colors and may repeat.
               </small>
             </section>
           )}
