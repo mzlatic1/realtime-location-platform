@@ -1,0 +1,110 @@
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    environment:
+      {
+        POSTGRES_DB: locations,
+        POSTGRES_USER: postgres,
+        POSTGRES_PASSWORD: postgres,
+      }
+    ports: ['5434:5432']
+    volumes:
+      [
+        'pg-data:/var/lib/postgresql/data',
+        './packages/db/migrations:/docker-entrypoint-initdb.d:ro',
+      ]
+    healthcheck:
+      {
+        test: ['CMD-SHELL', 'pg_isready -U postgres -d locations'],
+        interval: 5s,
+        timeout: 3s,
+        retries: 20,
+      }
+  redis:
+    image: redis:7-alpine
+    ports: ['6380:6379']
+    healthcheck:
+      {
+        test: ['CMD', 'redis-cli', 'ping'],
+        interval: 5s,
+        timeout: 3s,
+        retries: 20,
+      }
+  redpanda:
+    image: redpandadata/redpanda:v24.3.18
+    command:
+      [
+        redpanda,
+        start,
+        --overprovisioned,
+        --smp,
+        '1',
+        --memory,
+        1G,
+        --reserve-memory,
+        0M,
+        --node-id,
+        '0',
+        --check=false,
+        --kafka-addr,
+        PLAINTEXT://0.0.0.0:9092,
+        OUTSIDE://0.0.0.0:19092,
+        --advertise-kafka-addr,
+        PLAINTEXT://redpanda:9092,
+        OUTSIDE://localhost:19092,
+      ]
+    ports: ['19092:19092', '9644:9644']
+    healthcheck:
+      {
+        test: ['CMD-SHELL', 'rpk cluster health | grep -q Healthy'],
+        interval: 5s,
+        timeout: 5s,
+        retries: 30,
+      }
+  ingestion-api:
+    build: .
+    environment:
+      {
+        DATABASE_URL: postgresql://postgres:postgres@postgres:5432/locations,
+        REDIS_URL: redis://redis:6379,
+        KAFKA_BROKERS: redpanda:9092,
+        API_KEY: local-demo-key,
+      }
+    ports: ['4100:4100']
+    depends_on:
+      {
+        postgres: { condition: service_healthy },
+        redis: { condition: service_healthy },
+        redpanda: { condition: service_healthy },
+      }
+  processor:
+    build: .
+    command: ['pnpm', '--filter', '@realtime/location-processor', 'start']
+    environment:
+      {
+        DATABASE_URL: postgresql://postgres:postgres@postgres:5432/locations,
+        REDIS_URL: redis://redis:6379,
+        KAFKA_BROKERS: redpanda:9092,
+      }
+    depends_on:
+      {
+        postgres: { condition: service_healthy },
+        redpanda: { condition: service_healthy },
+      }
+  websocket:
+    build: .
+    command: ['pnpm', '--filter', '@realtime/websocket-gateway', 'start']
+    environment: { REDIS_URL: redis://redis:6379 }
+    ports: ['4101:4101']
+    depends_on: { redis: { condition: service_healthy } }
+  web:
+    build: .
+    command: ['pnpm', '--filter', '@realtime/web', 'start']
+    environment:
+      {
+        NEXT_PUBLIC_API_URL: http://localhost:4100,
+        NEXT_PUBLIC_WS_URL: ws://localhost:4101/live,
+      }
+    ports: ['3100:3100']
+    depends_on: [ingestion-api, websocket]
+volumes: { pg-data: {} }

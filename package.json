@@ -1,0 +1,29 @@
+{
+  "name": "realtime-location-platform",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.15.1",
+  "scripts": {
+    "dev": "pnpm --parallel --filter @realtime/ingestion-api --filter @realtime/location-processor --filter @realtime/websocket-gateway --filter @realtime/web dev",
+    "build": "pnpm -r build",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "pnpm -r typecheck",
+    "test": "vitest run",
+    "simulate": "pnpm --filter @realtime/simulator start",
+    "dlq:list": "tsx scripts/dlq.ts list",
+    "dlq:replay": "tsx scripts/dlq.ts replay"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.33.0",
+    "@types/node": "^22.17.2",
+    "eslint": "^9.33.0",
+    "prettier": "^3.6.2",
+    "tsx": "^4.20.4",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.39.1",
+    "vitest": "^3.2.4",
+    "kafkajs": "^2.2.4"
+  }
+}
