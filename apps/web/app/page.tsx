@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import maplibregl, {
+  GeoJSONSource,
   Map as MLMap,
   Marker,
   type StyleSpecification,
@@ -42,9 +43,25 @@ type FeedItem = {
   label: string;
 };
 
+type TransitRoute = {
+  routeCode: string;
+  directionId: number;
+  directionLabel: string;
+  destination: string;
+  description: string;
+  geometry: { type: 'LineString'; coordinates: number[][] };
+};
+
 function metadataValue(device: DeviceState, key: string) {
   const value = device.metadata?.[key];
   return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+}
+
+function metadataNumber(device: DeviceState, key: string) {
+  const value = device.metadata?.[key];
+  return typeof value === 'number' && Number.isFinite(value)
+    ? value
+    : undefined;
 }
 
 function routeCode(device: DeviceState) {
@@ -70,11 +87,13 @@ function routeColor(route: string) {
   return ROUTE_COLORS[Math.abs(hash) % ROUTE_COLORS.length]!;
 }
 
-function popupContent(device: DeviceState) {
+function popupContent(device: DeviceState, route?: TransitRoute) {
   const root = document.createElement('div');
   root.className = 'bus-popup';
   const line = document.createElement('strong');
-  line.textContent = `Metro line ${routeCode(device)}`;
+  line.textContent = route
+    ? `Metro ${route.routeCode} · ${route.directionLabel} to ${route.destination}`
+    : `Metro line ${routeCode(device)} · loading direction…`;
   const vehicle = document.createElement('span');
   vehicle.textContent = `Bus ${vehicleLabel(device)}`;
   const updated = document.createElement('small');
@@ -87,14 +106,73 @@ export default function Home() {
   const mapNode = useRef<HTMLDivElement>(null);
   const map = useRef<MLMap | null>(null);
   const markers = useRef(new Map<string, Marker>());
+  const selectedId = useRef<string | undefined>(undefined);
+  const routeCache = useRef(new Map<string, TransitRoute>());
   const [devices, setDevices] = useState(new Map<string, DeviceState>());
   const [selected, setSelected] = useState<DeviceState>();
   const [connected, setConnected] = useState(false);
   const [paused, setPaused] = useState(false);
   const [feed, setFeed] = useState<FeedItem[]>([]);
+  const [selectedRoute, setSelectedRoute] = useState<TransitRoute>();
+
+  function setRouteLine(route?: TransitRoute) {
+    const currentMap = map.current;
+    if (!currentMap?.isStyleLoaded()) return;
+    const source = currentMap.getSource('selected-bus-route') as
+      GeoJSONSource | undefined;
+    source?.setData({
+      type: 'Feature',
+      properties: {},
+      geometry: route?.geometry ?? { type: 'LineString', coordinates: [] },
+    });
+    if (route)
+      currentMap.setPaintProperty(
+        'selected-bus-route-line',
+        'line-color',
+        routeColor(route.routeCode),
+      );
+  }
+
+  async function loadRoute(device: DeviceState, openPopup = false) {
+    const direction = metadataNumber(device, 'direction_id') ?? 0;
+    const key = `${routeCode(device)}:${direction}`;
+    try {
+      let route = routeCache.current.get(key);
+      if (!route) {
+        const response = await fetch(
+          `${API}/api/v1/transit/routes/${encodeURIComponent(routeCode(device))}?direction_id=${direction}`,
+        );
+        if (!response.ok) throw new Error();
+        route = ((await response.json()) as { data: TransitRoute }).data;
+        routeCache.current.set(key, route);
+      }
+      if (selectedId.current !== device.device_id) return;
+      setSelectedRoute(route);
+      setRouteLine(route);
+      if (openPopup) {
+        const marker = markers.current.get(device.device_id);
+        if (marker) {
+          if (marker.getPopup()?.isOpen()) marker.getPopup()?.remove();
+          marker
+            .setPopup(
+              new maplibregl.Popup({
+                offset: 18,
+                closeButton: false,
+              }).setDOMContent(popupContent(device, route)),
+            )
+            .togglePopup();
+        }
+      }
+    } catch {
+      if (selectedId.current === device.device_id) setSelectedRoute(undefined);
+    }
+  }
 
   function showDevice(device: DeviceState, openPopup = false) {
+    selectedId.current = device.device_id;
     setSelected(device);
+    setSelectedRoute(undefined);
+    setRouteLine(undefined);
     for (const [id, existing] of markers.current) {
       existing
         .getElement()
@@ -112,10 +190,14 @@ export default function Home() {
         )
         .togglePopup();
     }
+    void loadRoute(device, openPopup);
   }
 
   function clearSelection() {
+    selectedId.current = undefined;
     setSelected(undefined);
+    setSelectedRoute(undefined);
+    setRouteLine(undefined);
     for (const marker of markers.current.values()) {
       marker.getElement().classList.remove('selected');
       if (marker.getPopup()?.isOpen()) marker.getPopup()?.remove();
@@ -131,6 +213,27 @@ export default function Home() {
       zoom: 9.5,
     });
     map.current.addControl(new maplibregl.NavigationControl(), 'bottom-right');
+    map.current.on('load', () => {
+      map.current?.addSource('selected-bus-route', {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          properties: {},
+          geometry: { type: 'LineString', coordinates: [] },
+        },
+      });
+      map.current?.addLayer({
+        id: 'selected-bus-route-line',
+        type: 'line',
+        source: 'selected-bus-route',
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: {
+          'line-color': '#57c7ff',
+          'line-width': 5,
+          'line-opacity': 0.9,
+        },
+      });
+    });
     return () => {
       for (const marker of markers.current.values()) marker.remove();
       markers.current.clear();
@@ -188,6 +291,16 @@ export default function Home() {
             return;
           const route = routeCode(device);
           setDevices((old) => new Map(old).set(device.device_id, device));
+          if (selectedId.current === device.device_id) {
+            setSelected(device);
+            const coordinates: [number, number] = [
+              device.longitude,
+              device.latitude,
+            ];
+            if (map.current && !map.current.getBounds().contains(coordinates))
+              map.current.easeTo({ center: coordinates, duration: 700 });
+            void loadRoute(device);
+          }
           setFeed((old) =>
             [
               {
@@ -265,6 +378,15 @@ export default function Home() {
       </section>
       <section className="grid">
         <div className="map" ref={mapNode}>
+          <button
+            className="map-home"
+            onClick={() =>
+              map.current?.flyTo({ center: LOS_ANGELES_CENTER, zoom: 9.5 })
+            }
+            title="Return to the Los Angeles default extent"
+          >
+            ⌂ Home
+          </button>
           <a
             className="source-credit"
             href="https://lacmta.github.io/metro-api-v2/docs/websockets/"
@@ -304,7 +426,12 @@ export default function Home() {
               ×
             </button>
             <span>LIVE BUS</span>
-            <h2>Metro line {routeCode(selected)}</h2>
+            <h2>
+              Metro {routeCode(selected)}
+              {selectedRoute
+                ? ` · ${selectedRoute.directionLabel} to ${selectedRoute.destination}`
+                : ''}
+            </h2>
             <p className="vehicle-name">Bus {vehicleLabel(selected)}</p>
             <dl>
               <div>
@@ -324,6 +451,10 @@ export default function Home() {
                 <dd>{selected.last_sequence_number}</dd>
               </div>
             </dl>
+            <p className="route-description">
+              {selectedRoute?.description ??
+                'Loading official route direction…'}
+            </p>
             <small>{new Date(selected.last_event_time).toLocaleString()}</small>
           </article>
         )}

@@ -17,6 +17,8 @@ export type LaMetroVehicleMessage = {
       route_id?: string;
       tripId?: string;
       routeId?: string;
+      direction_id?: number;
+      directionId?: number;
     };
     vehicle?: { id?: string; label?: string };
   };
@@ -88,6 +90,7 @@ export function toLocationEvent(
       route_code: routeCode,
       route_id: providerRouteId,
       trip_id: vehicle?.trip?.trip_id || vehicle?.trip?.tripId,
+      direction_id: vehicle?.trip?.direction_id ?? vehicle?.trip?.directionId,
       provider: 'api.metro.net',
     },
   };

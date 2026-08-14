@@ -94,6 +94,24 @@ h1 {
   position: relative;
   min-height: 100%;
 }
+.map-home {
+  position: absolute;
+  z-index: 3;
+  top: 12px;
+  left: 12px;
+  height: 36px;
+  border: 1px solid var(--ice);
+  background: rgba(11, 29, 42, 0.94);
+  color: var(--ice);
+  padding: 0 12px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.35);
+}
+.map-home:hover,
+.map-home:focus-visible {
+  background: var(--orange);
+}
 .bus-marker {
   --route-color: var(--orange);
   min-width: 34px;
@@ -202,6 +220,10 @@ article h2 {
 .vehicle-name {
   color: #9eb6c1;
   margin: -18px 0 20px;
+}
+.route-description {
+  color: #b9ccd3;
+  font-size: 0.78rem;
 }
 dl {
   display: grid;

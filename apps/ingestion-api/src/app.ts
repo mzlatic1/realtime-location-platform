@@ -16,6 +16,10 @@ import {
 } from '@realtime/contracts';
 import { LocationDatabase } from '@realtime/db';
 import { metrics } from '@realtime/observability';
+import {
+  LaMetroTransitRouteService,
+  type TransitRouteService,
+} from './transit-route.js';
 export interface EventProducer {
   send(events: LocationEvent[]): Promise<void>;
   ping(): Promise<boolean>;
@@ -74,7 +78,12 @@ type Db = Pick<
   | 'geofenceEvents'
 >;
 export function buildApp(
-  deps: { producer?: EventProducer; db?: Db; redis?: Redis } = {},
+  deps: {
+    producer?: EventProducer;
+    db?: Db;
+    redis?: Redis;
+    transitRoutes?: TransitRouteService;
+  } = {},
 ) {
   const app = Fastify({
     logger: process.env.NODE_ENV !== 'test',
@@ -91,6 +100,7 @@ export function buildApp(
       maxRetriesPerRequest: 0,
       enableOfflineQueue: false,
     });
+  const transitRoutes = deps.transitRoutes ?? new LaMetroTransitRouteService();
   const m = metrics('ingestion');
   void app.register(cors, {
     origin: (process.env.WEB_ORIGIN ?? 'http://localhost:3100').split(','),
@@ -154,6 +164,17 @@ export function buildApp(
       })
       .parse(req.query);
     return { data: await db.nearby(q.lat, q.lon, q.radius_m, q.limit) };
+  });
+  app.get('/api/v1/transit/routes/:routeCode', async (req) => {
+    const { routeCode } = z
+      .object({ routeCode: z.string().trim().min(1).max(12) })
+      .parse(req.params);
+    const { direction_id: directionId } = z
+      .object({
+        direction_id: z.coerce.number().int().min(0).max(1),
+      })
+      .parse(req.query);
+    return { data: await transitRoutes.route(routeCode, directionId) };
   });
   app.get('/api/v1/devices/:id', async (req, r) => {
     const { id } = z

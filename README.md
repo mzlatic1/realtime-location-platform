@@ -29,10 +29,13 @@ acceptance, not downstream completion.
 The default Compose stack connects to LA Metro's official bus vehicle-position
 WebSocket, normalizes each GTFS-realtime-shaped message, batches it through the public
 ingestion contract, and displays the processed positions on a labeled, clickable map.
-Bus-line, trip, and provider-vehicle metadata remain attached to each current state so
-operators can identify a vehicle directly from its marker or detail card. Provider
-timestamps become per-vehicle sequence numbers and deterministic event UUIDs make
-redelivery idempotent.
+Bus-line, trip, direction, and provider-vehicle metadata remain attached to each current
+state. Selecting a bus retrieves its official directional stop pattern and route overview,
+draws the line, and labels the popup with direction and destination (for example,
+`Metro 487 · Eastbound to Sierra Madre Villa Station`). The map follows a selected bus
+only when it leaves the user's current viewport; Home restores the Los Angeles default
+extent. Provider timestamps become per-vehicle sequence numbers and deterministic event
+UUIDs make redelivery idempotent.
 The deterministic simulator remains available as an explicit offline/failure-test source:
 
 ```bash

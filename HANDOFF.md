@@ -1,12 +1,12 @@
 # Post-compact handoff
 
-The complete stack is running against LA Metro's official bus vehicle-position WebSocket.
-The source batches provider updates through the public ingestion API; deterministic event
-IDs, provider timestamps, Redpanda, PostGIS, Redis, and the browser WebSocket are verified
-end to end. Current-state rows preserve route metadata, and the dashboard exposes the bus
-line through numbered, clickable markers and popups over a labeled CARTO basemap. The prior
-simulator and rail records were removed from the review database, while the simulator
-remains an explicit offline test tool. Next, execute the Redis outage and crash-before-offset
-demonstrations, run configurable k6 workloads, record actual latency/lag/error results, and
-capture the live dashboard. Preserve the at-least-once claims and do not invent exactly-once
-or performance evidence.
+The app at `http://localhost:3100` is running against LA Metro's official bus WebSocket.
+Direction IDs now survive ingestion, selecting a numbered bus loads its official
+directional stop pattern/overview, draws the route, and shows labels such as
+`Metro 487 · Eastbound to Sierra Madre Villa Station`. Home restores the LA extent and a
+selected bus is followed only after it leaves the visible bounds. The verified local route
+response for line 487 contained 42 ordered points. After `/compact`, first have the user
+review a live bus popup, line shape, Home, and follow behavior. If accepted, execute the
+Redis outage and crash-before-offset demonstrations, run configurable k6 workloads, record
+actual latency/lag/error results, and capture the live dashboard. Preserve at-least-once
+claims and do not invent exactly-once or performance evidence.

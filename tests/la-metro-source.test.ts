@@ -10,6 +10,7 @@ const actualShape = {
     trip: {
       tripId: '10040009472121-JUNE26',
       routeId: '40-13201',
+      directionId: 0,
     },
     position: { latitude: 34.057503, longitude: -118.23064 },
     timestamp: '1786677991',
@@ -34,6 +35,7 @@ describe('LA Metro source adapter', () => {
         route_code: '40',
         route_id: '40-13201',
         trip_id: '10040009472121-JUNE26',
+        direction_id: 0,
       },
     });
   });
