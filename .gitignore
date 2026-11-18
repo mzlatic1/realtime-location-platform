@@ -4,6 +4,10 @@ node_modules/
 dist/
 coverage/
 .env
+.env.*
+!.env.example
+.idea/
+.vscode/
 *.log
 *.tsbuildinfo
 benchmark-results/*.json
