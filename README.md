@@ -28,8 +28,14 @@ flowchart LR
 ```bash
 corepack enable && pnpm install
 cp .env.example .env
+# set NEXT_PUBLIC_CARTO_API_KEY in .env (free key: https://carto.com/basemaps/apikey)
 docker compose up --build
 ```
+
+The dark basemap uses CARTO raster tiles, which have required a free key since
+2026-09-25. Without `NEXT_PUBLIC_CARTO_API_KEY` the map shows gray "API KEY REQUIRED"
+tiles. The key is baked into the web image at build time, so rebuild after changing it
+(`docker compose up -d --build web`). Map data © OpenStreetMap contributors © CARTO.
 
 Dashboard: `http://localhost:3100`; OpenAPI: `http://localhost:4100/docs`.
 Producer calls need `x-api-key: local-demo-key`. The 202 response acknowledges broker

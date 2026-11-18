@@ -29,6 +29,7 @@ production privacy/compliance certification.
 | FR-10 | Display current buses on an interactive map, zoom/select equivalently, draw official directional stop patterns, label direction/destination, follow selected off-screen movement, and restore LA extent with Home. | UI tests/reviewed smoke.                            |
 | FR-11 | Batch visible device/feed refresh every five seconds while keeping selected-bus detail/off-screen follow immediate.                                                                                                | Timer/state tests and UI smoke.                     |
 | FR-12 | Explain route palette honestly as non-official, possibly repeating visual line differentiation and preserve text/shape selection cues.                                                                             | Rendered UI assertions and accessibility review.    |
+| FR-13 | Render the dark basemap from CARTO raster tiles authenticated by a free key supplied at web build time (`NEXT_PUBLIC_CARTO_API_KEY`), keep OSM/CARTO attribution visible, and warn when the key is missing.        | Basemap unit tests, keyed tile check, reviewed UI.  |
 
 ## Non-functional requirements
 

@@ -107,7 +107,10 @@ services:
     ports: ['4101:4101']
     depends_on: { redis: { condition: service_healthy } }
   web:
-    build: .
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_CARTO_API_KEY: ${NEXT_PUBLIC_CARTO_API_KEY:-}
     command: ['pnpm', '--filter', '@realtime/web', 'start']
     environment:
       {

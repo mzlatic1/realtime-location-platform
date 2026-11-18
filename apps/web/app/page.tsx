@@ -1,32 +1,14 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import maplibregl, {
-  GeoJSONSource,
-  Map as MLMap,
-  Marker,
-  type StyleSpecification,
-} from 'maplibre-gl';
+import maplibregl, { GeoJSONSource, Map as MLMap, Marker } from 'maplibre-gl';
 import type { DeviceState, LiveMessage } from '@realtime/contracts';
+import { cartoDarkMatterStyle, normalizeBasemapKey } from './basemap';
 
 const WS = process.env.NEXT_PUBLIC_WS_URL ?? 'ws://localhost:4101/live';
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4100';
 const LOS_ANGELES_CENTER: [number, number] = [-118.2437, 34.0522];
-const DARK_MATTER_STYLE: StyleSpecification = {
-  version: 8,
-  sources: {
-    carto: {
-      type: 'raster',
-      tiles: [
-        'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
-        'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
-        'https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
-      ],
-      tileSize: 512,
-      attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-    },
-  },
-  layers: [{ id: 'carto-dark-matter', type: 'raster', source: 'carto' }],
-};
+// Next.js only inlines NEXT_PUBLIC_* values referenced literally, so read it here.
+const CARTO_API_KEY = process.env.NEXT_PUBLIC_CARTO_API_KEY;
 const ROUTE_COLORS = [
   '#f6bd60',
   '#84a59d',
@@ -212,9 +194,15 @@ export default function Home() {
 
   useEffect(() => {
     if (!mapNode.current) return;
+    if (!normalizeBasemapKey(CARTO_API_KEY))
+      console.warn(
+        'NEXT_PUBLIC_CARTO_API_KEY is not set: CARTO serves "API KEY REQUIRED" placeholder tiles. Request a free key at https://carto.com/basemaps/apikey and rebuild the web image.',
+      );
     map.current = new maplibregl.Map({
       container: mapNode.current,
-      style: process.env.NEXT_PUBLIC_MAP_STYLE ?? DARK_MATTER_STYLE,
+      style:
+        process.env.NEXT_PUBLIC_MAP_STYLE ??
+        cartoDarkMatterStyle(CARTO_API_KEY),
       center: LOS_ANGELES_CENTER,
       zoom: 9.5,
     });

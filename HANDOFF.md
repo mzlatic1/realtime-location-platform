@@ -1,9 +1,9 @@
 # Vector session handoff
 
-**Status:** User-accepted live dashboard; cross-tool documentation and agent workflow are
-complete, final wrap-up is complete, and all Docker containers are intentionally stopped.
+**Status:** User-accepted live dashboard with a keyed CARTO basemap. The full Compose
+stack was restarted on 2026-11-17 so the user can review the map; it is running.
 
-**Last updated:** 2026-08-13 PDT
+**Last updated:** 2026-11-17 PST
 
 ## Cross-tool session contract completed
 
@@ -23,6 +23,23 @@ complete, final wrap-up is complete, and all Docker containers are intentionally
   geospatial/provider, evolution, security/privacy, and observability rules.
   `docs/engineering-workflow.md` defines ready/done gates and the documentation map.
 - README, architecture, decisions, and PLAN link or record this engineering baseline.
+
+## 2026-11-17 basemap key change (FR-13)
+
+CARTO stopped serving keyless raster tiles on 2026-09-25; the map showed gray
+"API KEY REQUIRED" tiles (HTTP 200, so status checks cannot detect it). The web app now
+builds the CARTO Dark Matter raster style in `apps/web/app/basemap.ts` with
+`NEXT_PUBLIC_CARTO_API_KEY`. The key is a free non-commercial CARTO key, browser-visible
+by design, kept in the git-ignored `.env`. Next.js inlines it at build time, so the
+`Dockerfile` takes it as a build arg and only the `web` service passes it in
+`docker-compose.yml`. After changing the key, rebuild: `docker compose up -d --build web`.
+A missing key logs a console warning and shows placeholder tiles; ingestion, state, and
+live updates are unaffected. See the ADR in `docs/decisions.md`.
+
+Observed: keyed CARTO tile request returned a real 512x512 tile; headless-browser load of
+`http://localhost:3100` made 8 CARTO tile requests, all HTTP 200, with no missing-key
+warning and real place labels visible. The key literal is present once in the web bundle
+and only in the web image history. Not verified: CARTO's long-term free-tier terms.
 
 ## Current accepted application
 
@@ -55,7 +72,7 @@ GET http://localhost:3100   HTTP 200
 GitHub Actions CI           run 31775461933 passed
 ```
 
-## Final closeout state
+## Prior closeout state (2026-08-13; superseded for service state above)
 
 On 2026-08-13, the user requested a complete shutdown and wrap-up. All 17 running Docker
 containers on the host were stopped successfully, including the Vector web/API/WebSocket,

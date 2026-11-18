@@ -61,6 +61,15 @@ validated server-side adapter; clients cannot nominate arbitrary upstream URLs. 
 schema drift produces observable rejection/failure and fixture updates, never silent
 field invention. Palette colors communicate route distinction only, not authority.
 
+The basemap is CARTO Dark Matter raster tiles (OpenStreetMap data) from the documented
+`basemaps.cartocdn.com/rastertiles/dark_all` endpoint with a free key. Since 2026-09-25
+CARTO answers keyless raster requests with HTTP 200 gray "API KEY REQUIRED" tiles, so
+status codes cannot detect the failure; the UI warns in the console when the key is
+absent. Next.js inlines `NEXT_PUBLIC_*` at build time, so the key is a Docker build
+argument for the web image, not a runtime variable. The key is a browser-visible usage
+identifier, not a secret, but it is still kept in `.env` and out of Git. Tile requests
+disclose the viewer's IP address and viewport to CARTO; no vehicle or device data is sent.
+
 ## Contract and topology evolution
 
 - Additive compatible event metadata may pass through; required/type/semantic breaks use
