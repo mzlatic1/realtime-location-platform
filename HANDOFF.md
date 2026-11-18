@@ -139,10 +139,8 @@ row, or volume was deleted. Restore with `docker compose up -d` (add `--build we
 changing `NEXT_PUBLIC_CARTO_API_KEY`); allow a minute or two before buses fill the map.
 `.idea/`, `.vscode/`, and `.env.*` (except `.env.example`) are now gitignored.
 
-At the user's explicit request, overriding the usual never-force-push rule for this one
-case, `main` was force-pushed on 2026-11-17 to remove one wrap commit that contained a
-local filesystem path; its hash is intentionally not recorded here. Commit author email
-addresses were reviewed and deliberately left unchanged at the user's direction.
+Commit author email addresses were reviewed and deliberately left unchanged at the user's
+direction.
 
 ## Next session
 
