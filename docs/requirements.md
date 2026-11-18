@@ -30,6 +30,7 @@ production privacy/compliance certification.
 | FR-11 | Batch visible device/feed refresh every five seconds while keeping selected-bus detail/off-screen follow immediate.                                                                                                | Timer/state tests and UI smoke.                     |
 | FR-12 | Explain route palette honestly as non-official, possibly repeating visual line differentiation and preserve text/shape selection cues.                                                                             | Rendered UI assertions and accessibility review.    |
 | FR-13 | Render the dark basemap from CARTO raster tiles authenticated by a free key supplied at web build time (`NEXT_PUBLIC_CARTO_API_KEY`), keep OSM/CARTO attribution visible, and warn when the key is missing.        | Basemap unit tests, keyed tile check, reviewed UI.  |
+| FR-14 | On screens wider than 760px, fit the dashboard to the browser window height with no page-level vertical scrollbar: the map takes the remaining height and the event feed scrolls inside its panel.                 | Headless viewport measurement and reviewed UI.      |
 
 ## Non-functional requirements
 

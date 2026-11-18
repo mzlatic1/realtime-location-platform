@@ -41,6 +41,22 @@ Observed: keyed CARTO tile request returned a real 512x512 tile; headless-browse
 warning and real place labels visible. The key literal is present once in the web bundle
 and only in the web image history. Not verified: CARTO's long-term free-tier terms.
 
+## 2026-11-17 fit-to-screen layout (FR-14)
+
+Maximizing the browser used to leave a page-level vertical scrollbar: the map row was
+sized `calc(100vh - 210px)` with a 540px minimum, but the header, metrics bar, and padding
+need more than 210px (82px overflow at 1366x768). `apps/web/app/styles.css` now makes
+`main` a full-height flex column (`100dvh`, 480px minimum) where the map row takes the
+remaining space, the event feed scrolls inside its panel, and the title shrinks on short
+windows (`min(6vw, 9vh)`). At 760px and narrower the stacked, scrolling layout is kept.
+
+Observed with a headless browser against the rebuilt Compose stack (page scroll height
+minus window height): 1366x768, 1920x1080, 1280x720, 1536x864, 1024x700, and 1366x560 all
+0px; 390x844 scrolls by design (146px). Tradeoff: the map is shorter than before at a
+given window size because the page now fits (558px to 487px at 1366x768). No automated
+layout test exists (the repo has no browser test harness); the measurement above is
+manual evidence, not a regression test.
+
 ## Current accepted application
 
 When started, the app at `http://localhost:3100` connects to LA Metro's official bus
